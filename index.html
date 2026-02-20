@@ -2,241 +2,310 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>King Dev Builderr - Pro Max Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Poppins:wght@300;600&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>King Dev Builderr - Ultra Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Poppins:wght@300;400;600&family=Roboto+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #6366f1; --accent: #f43f5e; --dark-bg: #0f172a; --panel-bg: #1e293b; --text: #f8fafc; }
+        :root {
+            --scratch-blue: #4c97ff;
+            --scratch-purple: #9966ff;
+            --scratch-orange: #ffab19;
+            --scratch-bg: #e9f0f8;
+        }
+        body { font-family: 'Poppins', sans-serif; height: 100vh; overflow: hidden; }
+        .block-shadow { box-shadow: 0 4px 0 rgba(0,0,0,0.1); }
+        .canvas-shadow { box-shadow: 0 0 50px rgba(0,0,0,0.3); }
+        .sidebar-item:hover { background: rgba(76, 151, 255, 0.1); }
+        #canvas::-webkit-scrollbar { width: 5px; }
+        #canvas::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
         
-        body { margin: 0; font-family: 'Poppins', sans-serif; background: var(--dark-bg); color: var(--text); overflow: hidden; display: flex; height: 100vh; }
-
-        /* Barra Lateral de Ferramentas */
-        #toolbar { width: 340px; background: var(--panel-bg); border-right: 1px solid #334155; display: flex; flex-direction: column; z-index: 100; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
-        .section { padding: 20px; border-bottom: 1px solid #334155; }
-        .section h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); margin-bottom: 15px; }
-
-        /* Canvas (Área de Edição Profissional) */
-        #viewport { flex: 1; background: #020617; display: flex; align-items: center; justify-content: center; position: relative; overflow: auto; background-image: radial-gradient(#1e293b 1px, transparent 1px); background-size: 30px 30px; }
-        #canvas { 
-            width: 390px; height: 844px; /* iPhone 13/14 Pro Size */
-            background: white; border-radius: 40px; position: relative; overflow: hidden;
-            box-shadow: 0 0 100px rgba(0,0,0,0.8), 0 0 0 12px #334155; transition: 0.3s;
+        /* Estilo Blocos Scratch */
+        .block-logic {
+            padding: 10px; margin: 8px; border-radius: 8px 20px 20px 8px;
+            color: white; font-weight: bold; font-size: 13px;
+            cursor: pointer; border-left: 10px solid rgba(0,0,0,0.2);
+            transition: transform 0.1s;
         }
-
-        /* Elementos e Widgets */
-        .widget-btn { 
-            background: #334155; border: none; color: white; padding: 12px; border-radius: 12px; 
-            cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px;
-            transition: 0.2s; margin-bottom: 8px; width: 100%;
-        }
-        .widget-btn:hover { background: var(--primary); transform: translateY(-2px); }
-
-        /* Inspector de Propriedades */
-        #inspector { flex-grow: 1; overflow-y: auto; padding: 20px; background: #111827; }
-        .prop-group { margin-bottom: 15px; }
-        label { font-size: 11px; color: #94a3b8; display: block; margin-bottom: 5px; }
-        input, select { 
-            width: 100%; background: #1e293b; border: 1px solid #334155; color: white; 
-            padding: 8px; border-radius: 8px; outline: none; transition: 0.2s;
-        }
-        input:focus { border-color: var(--primary); }
-
-        /* Elementos no Canvas */
-        .element { 
-            position: absolute; cursor: move; display: flex; align-items: center; justify-content: center;
-            transition: box-shadow 0.2s, transform 0.1s; box-sizing: border-box;
-        }
-        .selected { outline: 3px solid var(--primary) !important; box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); }
-
-        /* Botão Exportar */
-        #export-btn { 
-            background: var(--accent); color: white; border: none; padding: 20px; 
-            font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s;
-        }
-        #export-btn:hover { background: #e11d48; letter-spacing: 2px; }
+        .block-logic:active { transform: scale(0.95); }
+        
+        /* Resizer */
+        .resizer { width: 10px; height: 10px; background: white; border: 2px solid var(--scratch-blue); position: absolute; bottom: -5px; right: -5px; cursor: nwse-resize; }
     </style>
 </head>
-<body>
+<body class="bg-[#e9f0f8] flex flex-col">
 
-<div id="toolbar">
-    <div class="section">
-        <h2 style="color: var(--primary); margin: 0;">KING BUILDERR <span style="font-size: 10px; vertical-align: middle; color: gold;">PRO</span></h2>
-    </div>
-
-    <div class="section">
-        <h3>Widgets de Elite</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button class="widget-btn" onclick="add('button')">🔘 Botão</button>
-            <button class="widget-btn" onclick="add('h2')">📝 Título</button>
-            <button class="widget-btn" onclick="add('div')">📦 Box</button>
-            <button class="widget-btn" onclick="add('img')">🖼️ Foto</button>
+    <header class="bg-[#4c97ff] h-12 flex items-center px-4 gap-4 text-white shadow-md z-50">
+        <div class="bg-white/20 p-1 px-3 rounded-full font-bold text-sm tracking-widest">KING DEV BUILDERR</div>
+        <div class="h-6 w-[1px] bg-white/30"></div>
+        <button onclick="saveProject()" class="hover:bg-white/20 px-3 py-1 rounded text-xs">💾 Salvar</button>
+        <button onclick="exportCode()" class="bg-white text-[#4c97ff] px-4 py-1 rounded-full text-xs font-bold shadow-lg hover:bg-orange-400 hover:text-white transition-all">EXPORTAR .HTML</button>
+        <div class="ml-auto flex items-center gap-2">
+            <span class="text-[10px] opacity-70">MODO:</span>
+            <span class="bg-yellow-400 text-black px-2 py-0.5 rounded text-[10px] font-black">GOD MODE</span>
         </div>
-    </div>
+    </header>
 
-    <div id="inspector">
-        <div id="no-selection" style="text-align: center; color: #475569; margin-top: 50px;">
-            Selecione um elemento para editar
-        </div>
-        <div id="props" style="display: none;">
-            <h3>Estilização Pro</h3>
-            
-            <div class="prop-group">
-                <label>Conteúdo / Texto</label>
-                <input type="text" id="p-text" oninput="update()">
-            </div>
-
-            <div class="prop-group">
-                <label>Fonte (Google Fonts)</label>
-                <select id="p-font" onchange="update()">
-                    <option value="'Poppins', sans-serif">Poppins (Moderno)</option>
-                    <option value="'Montserrat', sans-serif">Montserrat (Elegante)</option>
-                    <option value="'Roboto Mono', monospace">Roboto Mono (Hacker)</option>
-                </select>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div class="prop-group"><label>Largura</label><input type="number" id="p-w" oninput="update()"></div>
-                <div class="prop-group"><label>Altura</label><input type="number" id="p-h" oninput="update()"></div>
-            </div>
-
-            <div class="prop-group">
-                <label>Cor de Fundo (Gradient)</label>
-                <input type="color" id="p-bg" oninput="update()">
-            </div>
-
-            <div class="prop-group">
-                <label>Sombra Glow (Blur)</label>
-                <input type="range" id="p-shadow" min="0" max="100" value="0" oninput="update()">
-            </div>
-
-            <div class="prop-group">
-                <label>Arredondamento (Round)</label>
-                <input type="range" id="p-radius" min="0" max="100" value="10" oninput="update()">
-            </div>
-
-            <div class="prop-group">
-                <label>Link da Página</label>
-                <select id="p-link" onchange="update()">
-                    <option value="">Nenhum</option>
-                    <option value="page2">Próxima Página</option>
-                </select>
-            </div>
-
-            <button onclick="del()" style="background: none; border: 1px solid #f43f5e; color: #f43f5e; width: 100%; padding: 10px; border-radius: 8px; cursor: pointer; margin-top: 20px;">Deletar Elemento</button>
-        </div>
-    </div>
-
-    <button id="export-btn" onclick="exportFull()">BAIXAR PROJETO FINAL</button>
-</div>
-
-<div id="viewport">
-    <div id="canvas"></div>
-</div>
-
-<script>
-    let project = {
-        currentPage: 'page1',
-        elements: [],
-        selectedId: null
-    };
-
-    function add(type) {
-        const el = {
-            id: 'id-' + Date.now(),
-            type: type,
-            text: type === 'button' ? 'Assinar Agora' : 'Novo Título',
-            x: 50, y: 100, w: 280, h: 60,
-            bg: type === 'button' ? '#6366f1' : '#f1f5f9',
-            color: type === 'button' ? '#ffffff' : '#0f172a',
-            font: "'Poppins', sans-serif",
-            shadow: 0,
-            radius: 12,
-            link: ''
-        };
-        project.elements.push(el);
-        select(el.id);
-        render();
-    }
-
-    function render() {
-        const canvas = document.getElementById('canvas');
-        canvas.innerHTML = '';
-        project.elements.forEach(el => {
-            const tag = document.createElement(el.type === 'button' ? 'button' : 'div');
-            tag.className = `element ${project.selectedId === el.id ? 'selected' : ''}`;
-            
-            // Estilos de Elite
-            tag.style.cssText = `
-                left: ${el.x}px; top: ${el.y}px; width: ${el.w}px; height: ${el.h}px;
-                background: ${el.bg}; color: ${el.color}; border-radius: ${el.radius}px;
-                font-family: ${el.font}; border: none; font-size: 16px; font-weight: 600;
-                box-shadow: 0 10px ${el.shadow}px -5px ${el.bg}80;
-            `;
-            
-            if(el.type === 'img') tag.innerHTML = `<img src="${el.text}" style="width:100%;height:100%;object-fit:cover;border-radius:${el.radius}px">`;
-            else tag.innerText = el.text;
-
-            tag.onmousedown = (e) => startDrag(e, el);
-            canvas.appendChild(tag);
-        });
-    }
-
-    function select(id) {
-        project.selectedId = id;
-        const el = project.elements.find(e => e.id === id);
-        document.getElementById('no-selection').style.display = 'none';
-        document.getElementById('props').style.display = 'block';
+    <main class="flex flex-1 overflow-hidden">
         
-        document.getElementById('p-text').value = el.text;
-        document.getElementById('p-w').value = el.w;
-        document.getElementById('p-h').value = el.h;
-        document.getElementById('p-bg').value = el.bg;
-        document.getElementById('p-font').value = el.font;
-        document.getElementById('p-shadow').value = el.shadow;
-        document.getElementById('p-radius').value = el.radius;
-        document.getElementById('p-link').value = el.link;
-        render();
-    }
+        <aside class="w-72 bg-white border-r border-gray-300 flex flex-col overflow-y-auto">
+            <div class="p-4 bg-gray-50 border-bottom font-bold text-xs text-gray-400 uppercase tracking-widest">Caixa de Ferramentas</div>
+            
+            <div class="p-2"><span class="text-xs font-bold text-purple-600 px-2">APARÊNCIA</span>
+                <div class="block-logic bg-[#9966ff]" onclick="add('h2')">Criar Título [PRO]</div>
+                <div class="block-logic bg-[#9966ff]" onclick="add('button')">Criar Botão [GAMER]</div>
+                <div class="block-logic bg-[#9966ff]" onclick="add('div')">Criar Container [GLASS]</div>
+                <div class="block-logic bg-[#9966ff]" onclick="add('img')">Inserir Imagem [URL]</div>
+            </div>
 
-    function update() {
-        const el = project.elements.find(e => e.id === project.selectedId);
-        el.text = document.getElementById('p-text').value;
-        el.w = document.getElementById('p-w').value;
-        el.h = document.getElementById('p-h').value;
-        el.bg = document.getElementById('p-bg').value;
-        el.font = document.getElementById('p-font').value;
-        el.shadow = document.getElementById('p-shadow').value;
-        el.radius = document.getElementById('p-radius').value;
-        el.link = document.getElementById('p-link').value;
-        render();
-    }
+            <div class="p-2"><span class="text-xs font-bold text-orange-500 px-2">EVENTOS & LÓGICA</span>
+                <div class="block-logic bg-[#ffab19]" onclick="addLogic('link')">Se clicado -> Ir para página</div>
+                <div class="block-logic bg-[#ffab19]" onclick="addLogic('alert')">Se clicado -> Mostrar Alerta</div>
+            </div>
 
-    function startDrag(e, el) {
-        select(el.id);
-        let rect = canvas.getBoundingClientRect();
-        let ox = e.clientX - rect.left - el.x;
-        let oy = e.clientY - rect.top - el.y;
+            <div class="p-2"><span class="text-xs font-bold text-blue-500 px-2">CONECTIVIDADE (EXTERNO)</span>
+                <div class="block-logic bg-[#4c97ff]" onclick="addExternal('discord')">Embed Discord [API]</div>
+                <div class="block-logic bg-[#4c97ff]" onclick="addExternal('video')">Player YouTube [BG]</div>
+            </div>
+        </aside>
 
-        document.onmousemove = (e) => {
-            el.x = e.clientX - rect.left - ox;
-            el.y = e.clientY - rect.top - oy;
-            render();
-            document.getElementById('p-w').value = el.w; // Feedback visual
+        <section class="flex-1 bg-[#f9f9f9] flex flex-col p-6 overflow-y-auto relative">
+            <div id="welcome-msg" class="absolute inset-0 flex flex-col items-center justify-center opacity-20 pointer-events-none">
+                <i data-lucide="layout" class="w-32 h-32 mb-4"></i>
+                <h2 class="text-2xl font-bold">ÁREA DE SCRIPT</h2>
+                <p>Arraste um bloco para começar a buildar</p>
+            </div>
+
+            <div id="inspector" class="hidden animate-in slide-in-from-right duration-300">
+                <div class="bg-white p-6 rounded-2xl shadow-xl border border-gray-200 w-full max-w-md">
+                    <h3 class="font-black text-gray-800 mb-4 flex items-center gap-2">
+                        <i data-lucide="settings-2" class="text-purple-600"></i> CONFIGURAÇÕES DO OBJETO
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400">TEXTO OU LINK</label>
+                            <input type="text" id="prop-text" oninput="update()" class="w-full bg-gray-100 border-none p-2 rounded-lg text-sm">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400">LARGURA (PX)</label>
+                                <input type="number" id="prop-w" oninput="update()" class="w-full bg-gray-100 border-none p-2 rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400">ALTURA (PX)</label>
+                                <input type="number" id="prop-h" oninput="update()" class="w-full bg-gray-100 border-none p-2 rounded-lg text-sm">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400">ESTILO DE FONTE</label>
+                            <select id="prop-font" onchange="update()" class="w-full bg-gray-100 border-none p-2 rounded-lg text-sm">
+                                <option value="'Poppins'">Poppins (Clean)</option>
+                                <option value="'Montserrat'">Montserrat (Bold)</option>
+                                <option value="'Roboto Mono'">Roboto Mono (Hacker)</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1">
+                                <label class="text-[10px] font-bold text-gray-400">COR FUNDO</label>
+                                <input type="color" id="prop-bg" oninput="update()" class="w-full h-10 border-none rounded-lg cursor-pointer">
+                            </div>
+                            <div class="flex-1">
+                                <label class="text-[10px] font-bold text-gray-400">COR TEXTO</label>
+                                <input type="color" id="prop-color" oninput="update()" class="w-full h-10 border-none rounded-lg cursor-pointer">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400">GLOW / BRILHO (Z-AXIS)</label>
+                            <input type="range" id="prop-glow" min="0" max="50" oninput="update()" class="w-full accent-purple-600">
+                        </div>
+
+                        <button onclick="removeElement()" class="w-full py-2 bg-red-50 text-red-500 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all">REMOVER ELEMENTO</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="w-[450px] bg-white border-l border-gray-300 flex flex-col items-center">
+            <div class="w-full p-2 bg-gray-50 flex justify-between px-4 border-b">
+                <span class="text-[10px] font-bold text-gray-400">STAGE (IPHONE 15 PRO)</span>
+                <div class="flex gap-1">
+                    <div class="w-2 h-2 rounded-full bg-red-400"></div>
+                    <div class="w-2 h-2 rounded-full bg-yellow-400"></div>
+                    <div class="w-2 h-2 rounded-full bg-green-400"></div>
+                </div>
+            </div>
+
+            <div class="flex-1 flex items-center justify-center w-full bg-gray-200">
+                <div id="canvas" class="bg-white w-[375px] h-[750px] relative canvas-shadow overflow-hidden rounded-[40px] border-[8px] border-gray-800">
+                    </div>
+            </div>
+
+            <div class="w-full h-48 bg-white border-t border-gray-300 p-4">
+                <span class="text-[10px] font-black text-gray-400">SPRITES / CAMADAS</span>
+                <div id="sprite-list" class="flex gap-2 mt-2 overflow-x-auto pb-2">
+                    </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        let state = {
+            selectedId: null,
+            elements: [],
+            pages: ['Home'],
+            currentPage: 'Home'
         };
-        document.onmouseup = () => document.onmousemove = null;
-    }
 
-    function del() {
-        project.elements = project.elements.filter(e => e.id !== project.selectedId);
-        project.selectedId = null;
-        document.getElementById('props').style.display = 'none';
-        document.getElementById('no-selection').style.display = 'block';
-        render();
-    }
+        function add(type) {
+            const el = {
+                id: 'king-' + Date.now(),
+                type: type,
+                text: type === 'button' ? 'CLIQUE AQUI' : 'Novo Título King',
+                x: 40, y: 100, w: 280, h: 55,
+                bg: type === 'button' ? '#4c97ff' : '#f3f4f6',
+                color: type === 'button' ? '#ffffff' : '#1e293b',
+                font: 'Poppins',
+                glow: 0,
+                radius: 15,
+                logic: null
+            };
+            state.elements.push(el);
+            select(el.id);
+            render();
+        }
 
-    function exportFull() {
-        alert("Ousadia pura! O King Dev Builderr está compilando seu código profissional...");
-        // O código de exportação aqui geraria o HTML completo com as Google Fonts importadas
-    }
-</script>
+        function render() {
+            const canvas = document.getElementById('canvas');
+            const spriteList = document.getElementById('sprite-list');
+            canvas.innerHTML = '';
+            spriteList.innerHTML = '';
+
+            state.elements.forEach(el => {
+                // Render Canvas
+                const div = document.createElement(el.type === 'button' ? 'button' : 'div');
+                div.id = el.id;
+                div.className = `absolute element flex items-center justify-center transition-all ${state.selectedId === el.id ? 'ring-4 ring-purple-500 ring-offset-2' : ''}`;
+                div.style.cssText = `
+                    left: ${el.x}px; top: ${el.y}px; width: ${el.w}px; height: ${el.h}px;
+                    background: ${el.bg}; color: ${el.color}; font-family: ${el.font};
+                    border-radius: ${el.radius}px; font-weight: bold; font-size: 14px;
+                    box-shadow: 0 ${el.glow/2}px ${el.glow}px ${el.bg}66;
+                    cursor: move; border: none; overflow: hidden;
+                `;
+                
+                if(el.type === 'img') {
+                    div.innerHTML = `<img src="${el.text}" class="w-full h-full object-cover">`;
+                } else {
+                    div.innerText = el.text;
+                }
+
+                div.onmousedown = (e) => dragStart(e, el);
+                canvas.appendChild(div);
+
+                // Render Sprites List (Igual Scratch)
+                const sprite = document.createElement('div');
+                sprite.className = `min-w-[70px] h-[70px] rounded-xl border-2 flex flex-col items-center justify-center text-[8px] font-bold cursor-pointer transition-all ${state.selectedId === el.id ? 'border-purple-500 bg-purple-50' : 'border-gray-100 bg-gray-50'}`;
+                sprite.innerHTML = `<div class="w-8 h-8 rounded bg-gray-300 mb-1"></div>${el.type.toUpperCase()}`;
+                sprite.onclick = () => select(el.id);
+                spriteList.appendChild(sprite);
+            });
+        }
+
+        function select(id) {
+            state.selectedId = id;
+            const el = state.elements.find(e => e.id === id);
+            document.getElementById('welcome-msg').style.display = 'none';
+            document.getElementById('inspector').style.display = 'block';
+            
+            document.getElementById('prop-text').value = el.text;
+            document.getElementById('prop-w').value = el.w;
+            document.getElementById('prop-h').value = el.h;
+            document.getElementById('prop-bg').value = el.bg;
+            document.getElementById('prop-color').value = el.color;
+            document.getElementById('prop-glow').value = el.glow;
+            render();
+        }
+
+        function update() {
+            const el = state.elements.find(e => e.id === state.selectedId);
+            el.text = document.getElementById('prop-text').value;
+            el.w = parseInt(document.getElementById('prop-w').value);
+            el.h = parseInt(document.getElementById('prop-h').value);
+            el.bg = document.getElementById('prop-bg').value;
+            el.color = document.getElementById('prop-color').value;
+            el.font = document.getElementById('prop-font').value;
+            el.glow = document.getElementById('prop-glow').value;
+            render();
+        }
+
+        function dragStart(e, el) {
+            select(el.id);
+            let rect = canvas.getBoundingClientRect();
+            let shiftX = e.clientX - rect.left - el.x;
+            let shiftY = e.clientY - rect.top - el.y;
+
+            document.onmousemove = (e) => {
+                el.x = e.clientX - rect.left - shiftX;
+                el.y = e.clientY - rect.top - shiftY;
+                render();
+            };
+            document.onmouseup = () => document.onmousemove = null;
+        }
+
+        function removeElement() {
+            state.elements = state.elements.filter(e => e.id !== state.selectedId);
+            state.selectedId = null;
+            document.getElementById('inspector').style.display = 'none';
+            document.getElementById('welcome-msg').style.display = 'flex';
+            render();
+        }
+
+        function exportCode() {
+            const html = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Build by King Dev</title>
+                    <script src="https://cdn.tailwindcss.com"><\/script>
+                    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
+                    <style>body { margin: 0; overflow-x: hidden; font-family: 'Poppins'; }</style>
+                </head>
+                <body class="bg-gray-100 flex justify-center">
+                    <div class="w-[375px] h-screen bg-white relative overflow-hidden shadow-2xl">
+                        ${state.elements.map(el => {
+                            const style = `position:absolute; left:${el.x}px; top:${el.y}px; width:${el.w}px; height:${el.h}px; background:${el.bg}; color:${el.color}; border-radius:${el.radius}px; display:flex; align-items:center; justify-content:center; box-shadow: 0 ${el.glow/4}px ${el.glow}px ${el.bg}66; border:none; cursor:pointer;`;
+                            return `<${el.type === 'button' ? 'button' : 'div'} style="${style}">${el.text}</${el.type === 'button' ? 'button' : 'div'}>`;
+                        }).join('')}
+                    </div>
+                </body>
+                </html>
+            `;
+            const blob = new Blob([html], {type: 'text/html'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'king_project_ultra.html';
+            a.click();
+        }
+
+        function saveProject() {
+            localStorage.setItem('king_project', JSON.stringify(state));
+            alert("Projeto salvo no navegador!");
+        }
+
+        // Carregar se existir
+        const saved = localStorage.getItem('king_project');
+        if(saved) {
+            state = JSON.parse(saved);
+            render();
+        }
+    </script>
 </body>
 </html>
