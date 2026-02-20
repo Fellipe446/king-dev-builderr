@@ -2,33 +2,19 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>King Dev Web Engine - Edição Extreme</title>
+    <title>King Dev Builderr - Engine</title>
     <style>
         :root { --primary: #3b82f6; --dark: #0f172a; --panel: #1e293b; --accent: #10b981; }
         body { display: flex; height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; background: #000; color: white; overflow: hidden; }
-        
-        /* Painéis */
-        #sidebar { width: 320px; background: var(--panel); border-right: 1px solid #334155; display: flex; flex-direction: column; z-index: 10; }
+        #sidebar { width: 320px; background: var(--panel); border-right: 1px solid #334155; display: flex; flex-direction: column; z-index: 10; overflow-y: auto; }
         .panel-section { padding: 15px; border-bottom: 1px solid #334155; }
-        
-        /* Área de Trabalho */
         #editor-container { flex-grow: 1; background: #0a0a0a; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        #canvas { 
-            width: 375px; height: 667px; background: white; color: black; 
-            border-radius: 5px; position: relative; overflow: hidden;
-            background-image: radial-gradient(#ddd 1px, transparent 1px); background-size: 20px 20px;
-        }
-
-        /* Elementos */
+        #canvas { width: 375px; height: 667px; background: white; color: black; border-radius: 5px; position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(59, 130, 246, 0.2); }
         .element { position: absolute; cursor: move; user-select: none; border: 2px solid transparent; box-sizing: border-box; display: flex; align-items: center; justify-content: center; text-align: center; }
-        .element:hover { border: 1px dashed var(--primary); }
         .selected { border: 2px solid var(--primary) !important; z-index: 100; }
-
-        /* Inputs e Botões */
         label { font-size: 11px; color: #94a3b8; display: block; margin-top: 8px; text-transform: uppercase; }
         input, select { width: 100%; background: #0f172a; color: white; border: 1px solid #475569; padding: 5px; border-radius: 4px; }
         .comp-btn { padding: 10px; background: var(--primary); border: none; color: white; cursor: pointer; border-radius: 5px; width: 100%; margin-bottom: 5px; font-weight: bold; }
-        .comp-btn:hover { background: #2563eb; }
     </style>
 </head>
 <body>
@@ -37,9 +23,8 @@
     <div class="panel-section">
         <h3>Páginas</h3>
         <select id="page-selector" onchange="switchPage(this.value)"></select>
-        <button onclick="addNewPage()" style="width:100%; margin-top:5px">+ Criar Nova Página</button>
+        <button onclick="addNewPage()" style="width:100%; margin-top:5px">+ Nova Página</button>
     </div>
-
     <div class="panel-section">
         <h3>Componentes</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
@@ -49,31 +34,25 @@
             <button class="comp-btn" onclick="addElement('img')">Imagem</button>
         </div>
     </div>
-
-    <div id="inspector" class="panel-section" style="display:none; flex-grow: 1; overflow-y: auto;">
+    <div id="inspector" class="panel-section" style="display:none;">
         <h3 style="color: var(--accent)">Propriedades</h3>
-        <label>Texto / Link da Imagem:</label>
+        <label>Texto / URL Imagem:</label>
         <input type="text" id="prop-text" oninput="updateElement()">
-        
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div><label>Largura:</label><input type="number" id="prop-w" oninput="updateElement()"></div>
             <div><label>Altura:</label><input type="number" id="prop-h" oninput="updateElement()"></div>
         </div>
-
         <label>Cor de Fundo:</label>
         <input type="color" id="prop-bg" oninput="updateElement()">
         <label>Cor do Texto:</label>
         <input type="color" id="prop-color" oninput="updateElement()">
-        <label>Borda Arredondada:</label>
+        <label>Arredondar Borda:</label>
         <input type="range" id="prop-radius" min="0" max="50" oninput="updateElement()">
-        
-        <label style="color: #fbbf24">Ação: Ir para Página</label>
+        <label style="color: #fbbf24">Ação ao Clicar:</label>
         <select id="prop-link" onchange="updateElement()"></select>
-        
-        <button onclick="deleteElement()" style="background:#ef4444; margin-top:20px; border:none; color:white; padding:10px; width:100%; cursor:pointer; border-radius: 5px;">Deletar Objeto</button>
+        <button onclick="deleteElement()" style="background:#ef4444; margin-top:20px; border:none; color:white; padding:10px; width:100%; cursor:pointer; border-radius: 5px;">Remover Objeto</button>
     </div>
-
-    <button onclick="exportCode()" style="background: var(--accent); color:white; padding:20px; border:none; cursor:pointer; font-weight:bold; font-size: 16px;">EXPORTAR SITE PRONTO</button>
+    <button onclick="exportCode()" style="background: var(--accent); color:white; padding:20px; border:none; cursor:pointer; font-weight:bold;">EXPORTAR SITE</button>
 </div>
 
 <div id="editor-container">
@@ -100,10 +79,10 @@
         const sel = document.getElementById('page-selector');
         const linkSel = document.getElementById('prop-link');
         sel.innerHTML = '';
-        linkSel.innerHTML = '<option value="">Nenhuma (Estático)</option>';
+        linkSel.innerHTML = '<option value="">Nenhuma</option>';
         for (let id in project.pages) {
             sel.innerHTML += `<option value="${id}">${project.pages[id].title}</option>`;
-            linkSel.innerHTML += `<option value="${id}">Página: ${project.pages[id].title}</option>`;
+            linkSel.innerHTML += `<option value="${id}">Ir para ${project.pages[id].title}</option>`;
         }
     }
 
@@ -120,7 +99,7 @@
         const el = {
             id: 'el-' + Date.now(),
             type: type,
-            text: type === 'img' ? 'https://via.placeholder.com/150' : 'Texto',
+            text: type === 'img' ? 'https://via.placeholder.com/150' : 'Novo Texto',
             x: 50, y: 50, w: 150, h: 50,
             styles: { background: type === 'button' ? '#3b82f6' : '#cccccc', color: '#000000', radius: 5 },
             link: ''
@@ -136,18 +115,15 @@
         project.pages[project.currentPage].elements.forEach(el => {
             const div = document.createElement(el.type === 'button' ? 'button' : 'div');
             div.className = `element ${project.selectedId === el.id ? 'selected' : ''}`;
-            div.style.cssText = `left:${el.x}px; top:${el.y}px; width:${el.w}px; height:${el.h}px; background:${el.styles.background}; color:${el.styles.color}; border-radius:${el.styles.radius}px; position: absolute;`;
-            
-            if(el.type === 'img') div.innerHTML = `<img src="${el.text}" style="width:100%;height:100%;pointer-events:none; object-fit: cover;">`;
+            div.style.cssText = `left:${el.x}px; top:${el.y}px; width:${el.w}px; height:${el.h}px; background:${el.styles.background}; color:${el.styles.color}; border-radius:${el.styles.radius}px; position:absolute; border:none;`;
+            if(el.type === 'img') div.innerHTML = `<img src="${el.text}" style="width:100%;height:100%;pointer-events:none;object-fit:cover;">`;
             else div.innerText = el.text;
-
             div.onmousedown = (e) => {
                 project.selectedId = el.id;
                 selectElement(el.id);
                 let rect = canvas.getBoundingClientRect();
                 let shiftX = e.clientX - rect.left - el.x;
                 let shiftY = e.clientY - rect.top - el.y;
-
                 document.onmousemove = (e) => {
                     el.x = e.clientX - rect.left - shiftX;
                     el.y = e.clientY - rect.top - shiftY;
@@ -198,26 +174,18 @@
             let elementsHtml = '';
             project.pages[id].elements.forEach(el => {
                 const action = el.link ? `onclick="goTo('${el.link}')"` : '';
-                const style = `position:absolute; left:${el.x}px; top:${el.y}px; width:${el.w}px; height:${el.h}px; background:${el.styles.background}; color:${el.styles.color}; border-radius:${el.styles.radius}px; border:none; cursor:pointer; overflow:hidden;`;
-                
+                const style = `position:absolute; left:${el.x}px; top:${el.y}px; width:${el.w}px; height:${el.h}px; background:${el.styles.background}; color:${el.styles.color}; border-radius:${el.styles.radius}px; border:none; cursor:pointer; overflow:hidden; display:flex; align-items:center; justify-content:center;`;
                 if(el.type === 'img') elementsHtml += `<img src="${el.text}" style="${style}" ${action}>`;
-                else elementsHtml += `<${el.type === 'button' ? 'button' : 'div'} style="${style} display:flex; align-items:center; justify-content:center;" ${action}>${el.text}</${el.type === 'button' ? 'button' : 'div'}>`;
+                else elementsHtml += `<${el.type === 'button' ? 'button' : 'div'} style="${style}" ${action}>${el.text}</${el.type === 'button' ? 'button' : 'div'}>`;
             });
             pagesHtml += `<div id="${id}" class="page" style="display:${id === 'page1' ? 'block' : 'none'}; width:100%; height:100vh; position:relative;">${elementsHtml}</div>`;
         }
-
-        const finalCode = `<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{margin:0; overflow:hidden; font-family:sans-serif;}</style></head><body>
-            ${pagesHtml}
-            <script>function goTo(id){ document.querySelectorAll('.page').forEach(p=>p.style.display='none'); document.getElementById(id).style.display='block'; }<\/script>
-        </body></html>`;
-
-        const blob = new Blob([finalCode], {type: 'text/html'});
+        const blob = new Blob([`<html><body style="margin:0; overflow:hidden;">${pagesHtml}<script>function goTo(id){document.querySelectorAll('.page').forEach(p=>p.style.display='none');document.getElementById(id).style.display='block';}<\/script></body></html>`], {type:'text/html'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'site_king_academy.html';
+        a.download = 'king_dev_site.html';
         a.click();
     }
-
     updateSelectors();
 </script>
 </body>
